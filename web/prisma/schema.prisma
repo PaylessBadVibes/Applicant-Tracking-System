@@ -1,0 +1,292 @@
+// ATS — Prisma schema
+// Datasource: MariaDB 11.4 LTS (mysql provider)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum JobTitle {
+  HR_RECRUITMENT
+  HR_TIMEKEEPER
+}
+
+enum Role {
+  admin
+}
+
+enum Department {
+  PRODUCTION
+  HOUSEKEEPING
+  IT
+  COMP_AND_BEN
+  ENGINEERING
+  SHE
+  FGW
+  CREATIVES
+  FINANCE
+  ADMIN
+}
+
+enum ApplicantStatus {
+  APPLIED
+  TRADE_TEST_SCHEDULED
+  NEEDS_RESCHEDULE
+  FAILED_RE_TRADE_TEST
+  PRE_ORIENTATION
+  DEPLOYMENT
+  REDEPLOYMENT
+}
+
+enum TradeTestOutcome {
+  PENDING
+  PASS
+  FAIL
+  NO_SHOW
+}
+
+enum AuditAction {
+  CREATED
+  UPDATED
+  DELETED
+  STATUS_CHANGED
+  RESUME_UPLOADED
+  RESUME_REMOVED
+  TRADE_TEST_SCHEDULED
+  TRADE_TEST_OUTCOME_RECORDED
+  EMAIL_SENT
+  EMAIL_FAILED
+  EMAIL_SKIPPED
+}
+
+enum AuditEntityType {
+  applicant
+  tradeTestAttempt
+  emailTemplate
+  user
+}
+
+enum EmailLogStatus {
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum EmailTriggerSource {
+  STATUS_PASS
+}
+
+// ---------- Better-Auth canonical (extended) + domain ----------
+
+model User {
+  id            String    @id @db.VarChar(36)
+  email         String    @unique @db.VarChar(254)
+  emailVerified Boolean   @default(false)
+  name          String    @db.VarChar(120)
+  image         String?   @db.VarChar(500)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  jobTitle    JobTitle
+  role        Role      @default(admin)
+  isActive    Boolean   @default(true)
+  createdById String?   @db.VarChar(36)
+  lastLoginAt DateTime?
+
+  createdBy    User?  @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdUsers User[] @relation("UserCreatedBy")
+
+  sessions      Session[]
+  accounts      Account[]
+  applicantsCreated     Applicant[]        @relation("ApplicantCreatedBy")
+  applicantsUpdated     Applicant[]        @relation("ApplicantUpdatedBy")
+  attemptsCreated       TradeTestAttempt[] @relation("AttemptCreatedBy")
+  attemptsRecorded      TradeTestAttempt[] @relation("AttemptRecordedBy")
+  auditLogs             AuditLog[]
+  emailTemplatesUpdated EmailTemplate[]
+
+  @@index([role, isActive])
+  @@index([createdAt(sort: Desc)])
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @db.VarChar(36)
+  userId    String   @db.VarChar(36)
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime
+  ipAddress String?  @db.VarChar(64)
+  userAgent String?  @db.VarChar(500)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @db.VarChar(36)
+  userId                String    @db.VarChar(36)
+  accountId             String    @db.VarChar(255)
+  providerId            String    @db.VarChar(64)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?   @db.VarChar(500)
+  password              String?   @db.VarChar(255)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @db.VarChar(36)
+  identifier String   @db.VarChar(254)
+  value      String   @db.VarChar(255)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+// ---------- Domain ----------
+
+model Applicant {
+  id                       String            @id @db.VarChar(36)
+  name                     String            @db.VarChar(120)
+  nameLower                String            @db.VarChar(120)
+  email                    String            @db.VarChar(254)
+  contactNumber            String            @db.VarChar(11)
+  interviewerName          String?           @db.VarChar(120)
+  department               Department
+  dateApplied              DateTime
+  status                   ApplicantStatus   @default(APPLIED)
+  preOrientationDate       DateTime?
+  resumeRelPath            String?           @db.VarChar(500)
+  resumeContentType        String?           @db.VarChar(120)
+  resumeSizeBytes          BigInt?
+  resumeUploadedAt         DateTime?
+  latestTradeTestAttemptId String?           @db.VarChar(36)
+  latestTradeTestOutcome   TradeTestOutcome?
+  tradeTestAttemptCount    Int               @default(0)
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  createdById              String            @db.VarChar(36)
+  updatedById              String            @db.VarChar(36)
+
+  createdBy User @relation("ApplicantCreatedBy", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  updatedBy User @relation("ApplicantUpdatedBy", fields: [updatedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  tradeTestAttempts TradeTestAttempt[]
+  emailLogs         EmailLog[]
+
+  @@index([department, dateApplied(sort: Desc)])
+  @@index([status, dateApplied(sort: Desc)])
+  @@index([department, status, dateApplied(sort: Desc)])
+  @@index([latestTradeTestOutcome, dateApplied(sort: Desc)])
+  @@index([nameLower])
+  @@index([email])
+  @@index([createdAt(sort: Desc)])
+  @@map("applicants")
+}
+
+model TradeTestAttempt {
+  id              String           @id @db.VarChar(36)
+  applicantId     String           @db.VarChar(36)
+  attemptNumber   Int
+  scheduledAt     DateTime
+  outcome         TradeTestOutcome @default(PENDING)
+  notes           String           @default("") @db.Text
+  recordedAt      DateTime?
+  recordedById    String?          @db.VarChar(36)
+  createdAt       DateTime         @default(now())
+  createdById     String           @db.VarChar(36)
+
+  applicant  Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  recordedBy User?     @relation("AttemptRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdBy  User      @relation("AttemptCreatedBy", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([applicantId, attemptNumber])
+  @@index([outcome, scheduledAt], map: "tta_outcome_sched_asc_idx")
+  @@index([outcome, scheduledAt(sort: Desc)], map: "tta_outcome_sched_desc_idx")
+  @@index([applicantId])
+  @@map("trade_test_attempts")
+}
+
+model AuditLog {
+  id                    String          @id @db.VarChar(36)
+  entityType            AuditEntityType
+  entityId              String          @db.VarChar(36)
+  parentEntityId        String?         @db.VarChar(36)
+  action                AuditAction
+  actorUserId           String?         @db.VarChar(36)
+  actorEmailSnapshot    String          @db.VarChar(254)
+  actorJobTitleSnapshot JobTitle
+  changes               Json?
+  snapshot              Json?
+  metadata              Json?
+  at                    DateTime        @default(now())
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([entityType, entityId, at(sort: Desc)])
+  @@index([actorUserId, at(sort: Desc)])
+  @@index([at(sort: Desc)])
+  @@map("audit_logs")
+}
+
+model EmailTemplate {
+  id                 String   @id @db.VarChar(64)
+  name               String   @db.VarChar(120)
+  description        String   @db.VarChar(500)
+  subject            String   @db.VarChar(300)
+  bodyMarkdown       String   @db.LongText
+  availableVariables Json
+  updatedAt          DateTime @updatedAt
+  updatedById        String?  @db.VarChar(36)
+
+  updatedBy User?      @relation(fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  emailLogs EmailLog[]
+
+  @@map("email_templates")
+}
+
+model EmailLog {
+  id            String             @id @db.VarChar(36)
+  templateId    String             @db.VarChar(64)
+  to            String             @db.VarChar(254)
+  cc            Json?
+  subject       String             @db.VarChar(300)
+  bodyHtml      String             @db.LongText
+  applicantId   String?            @db.VarChar(36)
+  triggerSource EmailTriggerSource @default(STATUS_PASS)
+  messageId     String?            @db.VarChar(255)
+  status        EmailLogStatus
+  error         String?            @db.Text
+  sentAt        DateTime           @default(now())
+
+  template  EmailTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  applicant Applicant?    @relation(fields: [applicantId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([applicantId, sentAt(sort: Desc)])
+  @@index([status, sentAt(sort: Desc)])
+  @@map("email_logs")
+}

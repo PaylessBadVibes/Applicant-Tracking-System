@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 33% 97%;
+    --foreground: 30 12% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 30 12% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 12% 14%;
+
+    --primary: 158 64% 22%;
+    --primary-foreground: 36 33% 97%;
+
+    --secondary: 36 22% 93%;
+    --secondary-foreground: 30 12% 14%;
+
+    --muted: 36 22% 93%;
+    --muted-foreground: 30 6% 42%;
+
+    --accent: 36 22% 93%;
+    --accent-foreground: 30 12% 14%;
+
+    --destructive: 2 70% 45%;
+    --destructive-foreground: 36 33% 97%;
+
+    --border: 30 12% 88%;
+    --input: 30 12% 88%;
+    --ring: 158 64% 22%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 30 8% 8%;
+    --foreground: 36 25% 92%;
+
+    --card: 30 8% 11%;
+    --card-foreground: 36 25% 92%;
+
+    --popover: 30 8% 11%;
+    --popover-foreground: 36 25% 92%;
+
+    --primary: 158 50% 58%;
+    --primary-foreground: 30 8% 10%;
+
+    --secondary: 30 8% 16%;
+    --secondary-foreground: 36 25% 92%;
+
+    --muted: 30 8% 16%;
+    --muted-foreground: 36 12% 62%;
+
+    --accent: 30 8% 16%;
+    --accent-foreground: 36 25% 92%;
+
+    --destructive: 2 70% 60%;
+    --destructive-foreground: 36 33% 97%;
+
+    --border: 30 6% 22%;
+    --input: 30 6% 22%;
+    --ring: 158 50% 58%;
+  }
+
+  * { @apply border-border; }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+  }
+
+  .font-serif {
+    font-feature-settings: "ss01" 1, "ss02" 1, "ss03" 1, "ss04" 1, "kern" 1;
+    font-optical-sizing: auto;
+  }
+
+  ::selection {
+    background-color: hsl(158 60% 88%);
+    color: hsl(158 64% 18%);
+  }
+  .dark ::selection {
+    background-color: hsl(158 50% 28%);
+    color: hsl(36 25% 95%);
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+}

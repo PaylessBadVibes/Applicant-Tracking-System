@@ -1,0 +1,27 @@
+{
+  "name": "ats",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Admin-only Applicant Tracking System (Next.js + MariaDB).",
+  "workspaces": [
+    "shared",
+    "web",
+    "scripts"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace web run dev",
+    "build": "npm --workspace shared run build && npm --workspace web run build",
+    "lint": "npm --workspace web run lint",
+    "typecheck": "npm --workspace shared run typecheck && npm --workspace web run typecheck",
+    "bootstrap-admin": "tsx scripts/bootstrap-admin.ts",
+    "seed-email-template": "tsx scripts/seed-email-template.ts",
+    "audit-retention": "tsx scripts/audit-retention.ts",
+    "db:generate": "npm --workspace web run prisma:generate",
+    "db:migrate": "npm --workspace web run prisma:migrate",
+    "db:deploy": "npm --workspace web run prisma:deploy",
+    "secrets:set": "tsx scripts/secrets-set.ts"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

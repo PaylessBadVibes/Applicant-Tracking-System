@@ -1,0 +1,17 @@
+# ATS — additions/overrides to apply to:
+#   C:\Program Files\MariaDB 11.4\data\my.ini  (under [mysqld])
+#
+# Reference only — already applied during one-time host install.
+
+[mysqld]
+character-set-server = utf8mb4
+collation-server     = utf8mb4_unicode_ci
+sql_mode             = STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
+innodb_file_per_table = 1
+max_connections       = 64
+bind-address          = 127.0.0.1
+
+slow_query_log         = 1
+slow_query_log_file    = C:\Users\Administrator\Pictures\Application Tracking System\data\logs\mariadb-slow.log
+long_query_time        = 1.0
+log_error              = C:\Users\Administrator\Pictures\Application Tracking System\data\logs\mariadb-error.log

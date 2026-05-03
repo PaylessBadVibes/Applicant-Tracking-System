@@ -1,0 +1,25 @@
+{
+  "name": "@ats/scripts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "bootstrap-admin": "tsx bootstrap-admin.ts",
+    "seed-email-template": "tsx seed-email-template.ts",
+    "secrets-set": "tsx secrets-set.ts",
+    "audit-retention": "tsx audit-retention.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ats/shared": "*",
+    "@prisma/client": "^6.0.0",
+    "better-auth": "^1.0.0",
+    "keytar": "^7.9.0",
+    "yargs": "17.7.2"
+  },
+  "devDependencies": {
+    "@types/yargs": "17.0.32",
+    "prisma": "^6.0.0",
+    "tsx": "4.15.5",
+    "typescript": "5.4.5"
+  }
+}
