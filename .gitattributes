@@ -1,0 +1,32 @@
+# Normalize line endings across platforms.
+# Keeps the working tree natural per-OS but stores LF in the repo.
+
+* text=auto eol=lf
+
+# Force LF for files that must be LF regardless of platform.
+*.sh        text eol=lf
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.mjs       text eol=lf
+*.cjs       text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.prisma    text eol=lf
+
+# Force CRLF for files that must be CRLF on Windows.
+*.ps1       text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.config    text eol=crlf
+
+# Treat as binary (no diff, no eol normalization).
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.zip       binary
